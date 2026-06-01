@@ -43,25 +43,55 @@ export default function OmrScanner({ test, onScanned }) {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-      });
+      setScanProgress("Kamera yuklanmoqda...");
+      
+      const constraints = {
+        video: { 
+          facingMode: "environment", // Orqa kamera
+          width: { ideal: 1280, min: 640 }, 
+          height: { ideal: 720, min: 480 } 
+        },
+        audio: false
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        
+        // iOS uchun playsinline va autoplay
+        videoRef.current.setAttribute("playsinline", "true");
+        videoRef.current.setAttribute("autoplay", "true");
+        videoRef.current.setAttribute("muted", "true");
+        
+        await videoRef.current.play();
+        
         setHasCamera(true);
         setScanResult(null);
         setPreviewImage(null);
         setCornersDetected(false);
         cornerDetectCountRef.current = 0;
+        setScanProgress("");
         
         // Start real-time corner detection loop
-        if (autoScanMode) {
+        if (autoScanMode && window.cv) {
           startRealTimeDetection();
         }
       }
-    } catch {
-      toast.error("Kamera ruxsati berilmadi");
+    } catch (err) {
+      console.error("Camera error:", err);
+      setScanProgress("");
+      
+      if (err.name === "NotAllowedError") {
+        toast.error("Kamera ruxsati rad etildi. Brauzer sozlamalaridan ruxsat bering.");
+      } else if (err.name === "NotFoundError") {
+        toast.error("Kamera topilmadi. Telefonda orqa kamera borligini tekshiring.");
+      } else if (err.name === "NotReadableError") {
+        toast.error("Kamera band. Boshqa ilovani yoping.");
+      } else {
+        toast.error("Kamera ochilmadi: " + err.message);
+      }
     }
   };
 
@@ -78,29 +108,29 @@ export default function OmrScanner({ test, onScanned }) {
       const canvas = canvasRef.current;
       if (!canvas) return;
       
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0);
+      // Faqat kichik qismni tekshirish (tezroq)
+      canvas.width = 640; // Kichik o'lcham
+      canvas.height = 480;
       
-      // Quick corner detection (low res for speed)
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Quick corner detection
       const src = window.cv.imread(canvas);
       const gray = new window.cv.Mat();
       window.cv.cvtColor(src, gray, window.cv.COLOR_RGBA2GRAY);
       
       const corners = findCornersQuick(gray, window.cv);
       
-      // Draw overlay
-      drawCornersOverlay(canvas, corners);
-      
       // Check if we have 4 corners
       if (corners.length >= 4) {
         cornerDetectCountRef.current++;
         setCornersDetected(true);
         
-        // Auto-capture after 2 seconds of stable detection
-        if (cornerDetectCountRef.current >= 10) { // ~2 seconds at 200ms interval
+        // Auto-capture after 1.5 seconds of stable detection
+        if (cornerDetectCountRef.current >= 3) { // 3 * 500ms = 1.5s
           stopRealTimeDetection();
+          setScanning(true);
           captureAndProcess();
         }
       } else {
@@ -110,54 +140,13 @@ export default function OmrScanner({ test, onScanned }) {
       
       src.delete();
       gray.delete();
-    }, 200); // Check every 200ms
+    }, 500); // Har 500ms da tekshirish (telefonda yaxshiroq)
   };
 
   const stopRealTimeDetection = () => {
     if (scanIntervalRef.current) {
       clearInterval(scanIntervalRef.current);
       scanIntervalRef.current = null;
-    }
-  };
-
-  // Draw corner detection overlay on canvas
-  const drawCornersOverlay = (canvas, corners) => {
-    const ctx = canvas.getContext("2d");
-    const scaleX = canvas.width / videoRef.current.videoWidth;
-    const scaleY = canvas.height / videoRef.current.videoHeight;
-    
-    // Draw corner markers
-    corners.forEach((corner, idx) => {
-      const x = corner[0].x * scaleX;
-      const y = corner[0].y * scaleY;
-      
-      ctx.strokeStyle = cornersDetected ? "#00ff00" : "#ff0000";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(x, y, 15, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-    
-    // If 4 corners found, draw connecting rectangle
-    if (corners.length >= 4) {
-      const sorted = sortCorners(corners);
-      ctx.strokeStyle = "#00ff00";
-      ctx.lineWidth = 4;
-      ctx.setLineDash([10, 5]);
-      ctx.beginPath();
-      ctx.moveTo(sorted[0].x * scaleX, sorted[0].y * scaleY);
-      ctx.lineTo(sorted[1].x * scaleX, sorted[1].y * scaleY);
-      ctx.lineTo(sorted[2].x * scaleX, sorted[2].y * scaleY);
-      ctx.lineTo(sorted[3].x * scaleX, sorted[3].y * scaleY);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.setLineDash([]);
-      
-      // Show "Capturing..." text
-      ctx.fillStyle = "rgba(0, 255, 0, 0.8)";
-      ctx.font = "bold 24px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("✓ Javob varag'i aniqlandi!", canvas.width / 2, 40);
     }
   };
 
@@ -650,7 +639,14 @@ export default function OmrScanner({ test, onScanned }) {
       )}>
         {hasCamera ? (
           <>
-            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className="w-full h-full object-cover"
+              style={{ transform: 'scaleX(1)' }} // iOS uchun
+            />
             <canvas ref={canvasRef} className="hidden" />
             {/* Corner detection overlay */}
             {autoScanMode && (
