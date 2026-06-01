@@ -1,0 +1,21 @@
+{
+  "name": "Student",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "O'quvchi to'liq ismi"
+    },
+    "class_name": {
+      "type": "string",
+      "description": "Sinf (masalan: 9-A)"
+    },
+    "roll_number": {
+      "type": "string",
+      "description": "Roll raqami"
+    }
+  },
+  "required": [
+    "full_name"
+  ]
+}

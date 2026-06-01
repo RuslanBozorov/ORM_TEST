@@ -1,0 +1,96 @@
+{
+  "name": "TestResult",
+  "type": "object",
+  "properties": {
+    "test_id": {
+      "type": "string",
+      "description": "Test ID"
+    },
+    "student_id": {
+      "type": "string",
+      "description": "O'quvchi ID"
+    },
+    "student_name": {
+      "type": "string",
+      "description": "O'quvchi ismi"
+    },
+    "class_name": {
+      "type": "string",
+      "description": "Sinf nomi"
+    },
+    "test_name": {
+      "type": "string",
+      "description": "Test nomi"
+    },
+    "total_score": {
+      "type": "number",
+      "description": "Umumiy ball"
+    },
+    "max_score": {
+      "type": "number",
+      "description": "Maksimal ball"
+    },
+    "percentage": {
+      "type": "number",
+      "description": "Foiz"
+    },
+    "correct_count": {
+      "type": "number",
+      "description": "To'g'ri javoblar soni"
+    },
+    "wrong_count": {
+      "type": "number",
+      "description": "Noto'g'ri javoblar soni"
+    },
+    "unanswered_count": {
+      "type": "number",
+      "description": "Javob berilmagan"
+    },
+    "subject_scores": {
+      "type": "array",
+      "description": "Fanlar bo'yicha ball",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subject_name": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "max_score": {
+            "type": "number"
+          },
+          "correct": {
+            "type": "number"
+          },
+          "wrong": {
+            "type": "number"
+          },
+          "percentage": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "answers": {
+      "type": "array",
+      "description": "O'quvchi javoblari",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rank": {
+      "type": "number",
+      "description": "Reyting o'rni"
+    },
+    "variant": {
+      "type": "string",
+      "description": "Variant (A, B, C, D)"
+    }
+  },
+  "required": [
+    "test_id",
+    "student_name"
+  ]
+}

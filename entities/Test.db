@@ -1,0 +1,97 @@
+{
+  "name": "Test",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Test nomi"
+    },
+    "class_name": {
+      "type": "string",
+      "description": "Sinf nomi (masalan: 9-A, 10-B)"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Test sanasi"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "completed"
+      ],
+      "default": "draft",
+      "description": "Test holati"
+    },
+    "subjects": {
+      "type": "array",
+      "description": "Fanlar ro'yxati (bloklar)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Fan nomi"
+          },
+          "sections": {
+            "type": "array",
+            "description": "Bo'limlar",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "question_type": {
+                  "type": "string",
+                  "enum": [
+                    "mcq4",
+                    "mcq5",
+                    "true_false",
+                    "numerical",
+                    "integer"
+                  ]
+                },
+                "question_count": {
+                  "type": "number"
+                },
+                "correct_score": {
+                  "type": "number",
+                  "default": 3
+                },
+                "wrong_score": {
+                  "type": "number",
+                  "default": -1
+                },
+                "numerical_digits": {
+                  "type": "number",
+                  "default": 3
+                },
+                "answers": {
+                  "type": "array",
+                  "description": "To'g'ri javoblar kaliti",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "total_questions": {
+      "type": "number",
+      "description": "Jami savollar soni"
+    },
+    "max_score": {
+      "type": "number",
+      "description": "Maksimal ball"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
